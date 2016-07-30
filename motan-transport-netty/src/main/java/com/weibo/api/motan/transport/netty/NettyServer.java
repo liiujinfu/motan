@@ -115,6 +115,11 @@ public class NettyServer extends AbstractServer implements StatisticCallback {
 
 		int minWorkerThread = 0, maxWorkerThread = 0;
 
+		/*
+		 * 这里如果是共享 channel 话.线程数会设置的大一点,共享和非共享的需求,可以说是有些 channel  是 channel safe .所以
+		 * 可以多个线程共享.不保存状态.这种就可以设置的大一点.
+		 * http://seeallhearall.blogspot.sg/2012/06/netty-tutorial-part-15-on-channel.html Shared and Exclusive Channel Handlers
+         */
 		if (shareChannel) {
 			minWorkerThread = url.getIntParameter(URLParamType.minWorkerThread.getName(),
 					MotanConstants.NETTY_SHARECHANNEL_MIN_WORKDER);
@@ -137,6 +142,8 @@ public class NettyServer extends AbstractServer implements StatisticCallback {
 		channelManage = new NettyServerChannelManage(maxServerConnection);
 
 		bootstrap = new ServerBootstrap(channelFactory);
+		//http://docs.oracle.com/javase/7/docs/api/java/net/StandardSocketOptions.html?is-external=true#TCP_NODELAY
+		//这里tcpNoDelay表示服务端会开启无延迟,也就是不使用Nagle算法,这样包就会立即发布,而不是合并之后发送.提高效率.
 		bootstrap.setOption("child.tcpNoDelay", true);
 		bootstrap.setOption("child.keepAlive", true);
 
